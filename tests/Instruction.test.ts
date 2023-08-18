@@ -24,7 +24,7 @@ describe("Instruction", () => {
 	test("instruction: JMP_ABS", async () => {
 		// instruction: JMP_ABS
 		// Jump to an address in the next two bytes.
-		memory.data[0xfffc] = Instruction.JMP.ABS;
+		memory.data[0xfffc] = Instruction.operations.JMP.absolute!;
 		memory.data[0xfffd] = 0x01;
 		memory.data[0xfffe] = 0x00;
 
@@ -37,7 +37,7 @@ describe("Instruction", () => {
 		// instruction: JSR
 		// Jump to an address specified in the next two bytes
 		// and push the return address onto the stack.
-		memory.data[0xfffc] = Instruction.JSR;
+		memory.data[0xfffc] = Instruction.operations.JSR.absolute!;
 		memory.data[0xfffd] = 0x01;
 		memory.data[0xfffe] = 0x00;
 
@@ -49,7 +49,7 @@ describe("Instruction", () => {
 	test("instruction: LDA_IM", async () => {
 		// instruction: LDA_IM
 		// Load a value specified in the next byte into the accumulator.
-		memory.data[0xfffc] = Instruction.LDA.IM;
+		memory.data[0xfffc] = Instruction.operations.LDA.immediate!;
 		memory.data[0xfffd] = 0xff;
 
 		await processor.execute(2);
@@ -65,7 +65,7 @@ describe("Instruction", () => {
 		// Load a value at an address specified in the next byte
 		// in zero page memory into the accumulator.
 		processor.accumulator = 0xff;
-		memory.data[0xfffc] = Instruction.LDA.ZP;
+		memory.data[0xfffc] = Instruction.operations.LDA.zeroPage!;
 		memory.data[0xfffd] = 0x42;
 		memory.data[0x0042] = 0x00;
 
@@ -83,7 +83,7 @@ describe("Instruction", () => {
 		// specified in the next byte, plus the value in register X,
 		// into the accumulator.
 		processor.registerX = 0x05;
-		memory.data[0xfffc] = Instruction.LDA.ZPX;
+		memory.data[0xfffc] = Instruction.operations.LDA.zeroPageX!;
 		memory.data[0xfffd] = 0x42;
 		memory.data[0x0047] = 0x0f;
 
@@ -103,7 +103,7 @@ describe("Instruction", () => {
 		// wraps properly.
 		processor.registerX = 0xff;
 
-		memory.data[0xfffc] = Instruction.LDA.ZPX;
+		memory.data[0xfffc] = Instruction.operations.LDA.zeroPageX!;
 		memory.data[0xfffd] = 0x80;
 		memory.data[0x007f] = 0xff;
 
@@ -119,7 +119,7 @@ describe("Instruction", () => {
 		// instruction: LDA_ABS
 		// Load a value at an address specified in the next two bytes
 		// into the accumulator.
-		memory.data[0xfffc] = Instruction.LDA.ABS;
+		memory.data[0xfffc] = Instruction.operations.LDA.absolute!;
 		memory.data[0xfffd] = 0x34;
 		memory.data[0xfffe] = 0x12;
 		memory.data[0x1234] = 0x55;
@@ -138,7 +138,7 @@ describe("Instruction", () => {
 		// in the next two bytes, plus the value in register X,
 		// into the accumulator.
 		processor.registerX = 0x05;
-		memory.data[0xfffc] = Instruction.LDA.ABSX;
+		memory.data[0xfffc] = Instruction.operations.LDA.absoluteX!;
 		memory.data[0xfffd] = 0x34;
 		memory.data[0xfffe] = 0x12;
 		memory.data[0x1239] = 0x55;
@@ -158,7 +158,7 @@ describe("Instruction", () => {
 		// into the accumulator  and ensure that a
 		// page cross takes an extra cycle.
 		processor.registerX = 0xff;
-		memory.data[0xfffc] = Instruction.LDA.ABSX;
+		memory.data[0xfffc] = Instruction.operations.LDA.absoluteX!;
 		memory.data[0xfffd] = 0x34;
 		memory.data[0xfffe] = 0x12;
 		memory.data[0x1333] = 0x55;
@@ -177,7 +177,7 @@ describe("Instruction", () => {
 		// in the next two bytes, plus the value in register Y,
 		// into the accumulator.
 		processor.registerY = 0x05;
-		memory.data[0xfffc] = Instruction.LDA.ABSY;
+		memory.data[0xfffc] = Instruction.operations.LDA.absoluteY!;
 		memory.data[0xfffd] = 0x34;
 		memory.data[0xfffe] = 0x12;
 		memory.data[0x1239] = 0x55;
@@ -197,7 +197,7 @@ describe("Instruction", () => {
 		// into the accumulator and ensure that a
 		// page cross takes an extra cycle.
 		processor.registerY = 0xff;
-		memory.data[0xfffc] = Instruction.LDA.ABSY;
+		memory.data[0xfffc] = Instruction.operations.LDA.absoluteY!;
 		memory.data[0xfffd] = 0x34;
 		memory.data[0xfffe] = 0x12;
 		memory.data[0x1333] = 0x55;
@@ -216,7 +216,7 @@ describe("Instruction", () => {
 		// specified in the next byte, plus the value in register X,
 		// into the accumulator.
 		processor.registerX = 0x04;
-		memory.data[0xfffc] = Instruction.LDA.INDX;
+		memory.data[0xfffc] = Instruction.operations.LDA.indirectX!;
 		memory.data[0xfffd] = 0x02;
 		memory.data[0x0006] = 0x00;
 		memory.data[0x0007] = 0x80;
@@ -236,7 +236,7 @@ describe("Instruction", () => {
 		// at an other address in zero page memory specified
 		// in the next byte into the accumulator.
 		processor.registerY = 0x04;
-		memory.data[0xfffc] = Instruction.LDA.INDY;
+		memory.data[0xfffc] = Instruction.operations.LDA.indirectY!;
 		memory.data[0xfffd] = 0x02;
 		memory.data[0x0002] = 0x00;
 		memory.data[0x0003] = 0x80;
@@ -257,7 +257,7 @@ describe("Instruction", () => {
 		// in the next byte into the accumulator and ensure that a
 		// page cross takes an extra cycle.
 		processor.registerY = 0xff;
-		memory.data[0xfffc] = Instruction.LDA.INDY;
+		memory.data[0xfffc] = Instruction.operations.LDA.indirectY!;
 		memory.data[0xfffd] = 0x02;
 		memory.data[0x0002] = 0x08;
 		memory.data[0x0003] = 0x80;
@@ -274,7 +274,7 @@ describe("Instruction", () => {
 	test("instruction: NOP", async () => {
 		// instruction: NOP
 		// Do nothing for one cycle.
-		memory.data[0xfffc] = Instruction.NOP;
+		memory.data[0xfffc] = Instruction.operations.NOP.implied!;
 
 		const previousFlags = Object.assign({}, processor.flags);
 		await processor.execute(1);

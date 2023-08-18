@@ -26,6 +26,7 @@ export class Processor {
 
 	cycles = 0;
 	cycleDuration = 0;
+	lastInstruction = 0;
 
 	constructor(memory: Memory, cycleDuration = 0) {
 		this.memory = memory;
@@ -37,8 +38,10 @@ export class Processor {
 		this.cycles += _cycles;
 
 		while (this.cycles > 0) {
-			const instruction = await this.fetchByte();
-			await Instruction.execute(instruction, this);
+			const instructionCode = await this.fetchByte();
+			this.lastInstruction = instructionCode;
+			const instruction = new Instruction(this, instructionCode);
+			await instruction.execute();
 		}
 	}
 
@@ -86,6 +89,7 @@ export class Processor {
 		console.log(
 			"--- Processor state ---\n",
 			`Program counter:\t${formatHex(this.programCounter)}\n`,
+			`Instruction:\t\t${formatHex(this.lastInstruction)}\n`,
 			`Stack pointer:\t\t${formatHex(this.stackPointer)}\n`,
 			"\n",
 			`Accumulator:\t${formatHex(this.accumulator, 2)}\n`,
