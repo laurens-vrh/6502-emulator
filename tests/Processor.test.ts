@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 
+import { Instruction } from "../src/Instruction";
 import { Memory } from "../src/Memory";
 import { Processor } from "../src/Processor";
-import { ProcessorFlags } from "../src/types";
-import { Instruction } from "../src/Instruction";
+import { checkFlags } from "./checkFlags";
 
 describe("Processor", () => {
 	var memory: Memory;
@@ -107,16 +107,3 @@ describe("Processor", () => {
 		});
 	});
 });
-
-export function checkFlags(
-	flags: ProcessorFlags,
-	previousFlags: ProcessorFlags,
-	criteria: Partial<ProcessorFlags>
-) {
-	Object.entries(flags).forEach(([flag, value]) => {
-		expect(value).toBe(
-			criteria[flag as keyof ProcessorFlags] ??
-				previousFlags[flag as keyof ProcessorFlags]
-		);
-	});
-}

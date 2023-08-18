@@ -5,4 +5,6 @@ module.exports = {
 	moduleNameMapper: {
 		"^(\\.\\.?\\/.+)\\.js$": "$1",
 	},
+	verbose: true,
+	maxWorkers: "100%",
 };

@@ -4,7 +4,7 @@ import { Instruction } from "../src/Instruction";
 import { Memory } from "../src/Memory";
 import { Processor } from "../src/Processor";
 import { AddressingMode, ProcessorFlags } from "../src/types";
-import { checkFlags } from "./Processor.test";
+import { checkFlags } from "./checkFlags";
 
 var memory: Memory;
 var processor: Processor;
