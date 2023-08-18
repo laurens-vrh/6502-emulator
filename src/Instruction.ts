@@ -55,6 +55,30 @@ export class Instruction {
 				break;
 			}
 
+			case OperationCode.LDX: {
+				var data = await this.getData(addressingMode);
+
+				if (addressingMode === AddressingMode.absolute)
+					data = await this.processor.readByte(data);
+
+				this.processor.registerX = data;
+				this.processor.updateFlags();
+
+				break;
+			}
+
+			case OperationCode.LDY: {
+				var data = await this.getData(addressingMode);
+
+				if (addressingMode === AddressingMode.absolute)
+					data = await this.processor.readByte(data);
+
+				this.processor.registerY = data;
+				this.processor.updateFlags();
+
+				break;
+			}
+
 			case OperationCode.NOP: {
 				break;
 			}
@@ -72,9 +96,15 @@ export class Instruction {
 				return await this.processor.readByte(address);
 			}
 
-			case AddressingMode.zeroPageX: {
+			case AddressingMode.zeroPageX:
+			case AddressingMode.zeroPageY: {
+				const register =
+					addressingMode === AddressingMode.zeroPageY
+						? this.processor.registerY
+						: this.processor.registerX;
+
 				var address = await this.processor.fetchByte();
-				address = (address + this.processor.registerX) % 0x100;
+				address = (address + register) % 0x100;
 				await this.processor.cycle();
 				return await this.processor.readByte(address);
 			}
@@ -83,16 +113,15 @@ export class Instruction {
 				return await this.processor.fetchWord();
 			}
 
-			case AddressingMode.absoluteX: {
-				const address = await this.processor.fetchWord();
-				const newAddress = address + this.processor.registerX;
-				if (address >> 8 !== newAddress >> 8) await this.processor.cycle();
-				return await this.processor.readByte(newAddress);
-			}
-
+			case AddressingMode.absoluteX:
 			case AddressingMode.absoluteY: {
+				const register =
+					addressingMode === AddressingMode.absoluteY
+						? this.processor.registerY
+						: this.processor.registerX;
+
 				const address = await this.processor.fetchWord();
-				const newAddress = address + this.processor.registerY;
+				const newAddress = address + register;
 				if (address >> 8 !== newAddress >> 8) await this.processor.cycle();
 				return await this.processor.readByte(newAddress);
 			}
@@ -155,6 +184,20 @@ export class Instruction {
 			absoluteY: 0xb9,
 			indirectX: 0xa1,
 			indirectY: 0xb1,
+		},
+		LDX: {
+			immediate: 0xa2,
+			zeroPage: 0xa6,
+			zeroPageY: 0xb6,
+			absolute: 0xae,
+			absoluteY: 0xbe,
+		},
+		LDY: {
+			immediate: 0xa0,
+			zeroPage: 0xa4,
+			zeroPageX: 0xb4,
+			absolute: 0xac,
+			absoluteX: 0xbc,
 		},
 		NOP: { implied: 0xea },
 	};

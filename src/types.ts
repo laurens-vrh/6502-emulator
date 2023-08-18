@@ -12,6 +12,8 @@ export enum OperationCode {
 	JMP = "JMP",
 	JSR = "JSR",
 	LDA = "LDA",
+	LDX = "LDX",
+	LDY = "LDY",
 	NOP = "NOP",
 }
 
@@ -19,6 +21,7 @@ export enum AddressingMode {
 	immediate = "immediate",
 	zeroPage = "zeroPage",
 	zeroPageX = "zeroPageX",
+	zeroPageY = "zeroPageY",
 	absolute = "absolute",
 	absoluteX = "absoluteX",
 	absoluteY = "absoluteY",

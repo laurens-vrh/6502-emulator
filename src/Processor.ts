@@ -33,9 +33,9 @@ export class Processor {
 		this.cycleDuration = cycleDuration;
 	}
 
-	async execute(_cycles: number, _cycleDuration?: number) {
-		if (_cycleDuration) this.cycleDuration = _cycleDuration;
-		this.cycles += _cycles;
+	async execute(cycles: number, cycleDuration?: number) {
+		if (cycleDuration) this.cycleDuration = cycleDuration;
+		this.cycles += cycles;
 
 		while (this.cycles > 0) {
 			const instructionCode = await this.fetchByte();
@@ -81,8 +81,18 @@ export class Processor {
 	}
 
 	updateFlags() {
-		this.flags.zeroFlag = this.accumulator === 0;
-		this.flags.negativeFlag = (this.accumulator & 0b10000000) > 0;
+		const registerLetter = Instruction.getOperation(
+			this.lastInstruction
+		).operationCode?.slice(-1);
+		const register =
+			registerLetter === "A"
+				? this.accumulator
+				: registerLetter === "X"
+				? this.registerX
+				: this.registerY;
+
+		this.flags.zeroFlag = register === 0;
+		this.flags.negativeFlag = (register & 0b10000000) > 0;
 	}
 
 	logState() {

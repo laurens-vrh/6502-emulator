@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import { Memory } from "../src/Memory";
 import { Processor } from "../src/Processor";
 import { ProcessorFlags } from "../src/types";
+import { Instruction } from "../src/Instruction";
 
 describe("Processor", () => {
 	var memory: Memory;
@@ -78,6 +79,8 @@ describe("Processor", () => {
 		// method: updateFlags()
 		// Update the zero and negative flags according to
 		// the value in the accumulator
+
+		processor.lastInstruction = Instruction.operations.LDA.immediate!;
 
 		var previousFlags = Object.assign({}, processor.flags);
 		processor.accumulator = 0x12;
