@@ -116,5 +116,35 @@ describe("Processor", () => {
 			expect(value).toBe(0x1234);
 			expect(processor.programCounter).toBe(0x0002);
 		});
+
+		test("method: pushStack()", async () => {
+			/*
+					method: pushStack()
+				Push an address onto the stack and update the
+				stack pointer accordingly */
+
+			processor.cycles = 4;
+
+			await processor.pushStack(0x1234);
+			const value = await processor.readWord(processor.stackPointer + 1);
+			expect(value).toBe(0x1234 - 1);
+			expect(processor.stackPointer).toBe(0x01fd);
+		});
+
+		test("method: popStack()", async () => {
+			/*
+					method: popStack()
+				Pop an address from the stack and update the
+				stack pointer accordingly */
+
+			processor.cycles = 4;
+			processor._stackPointer = 0xfd;
+			memory.data[0x01fe] = 0x33;
+			memory.data[0x01ff] = 0x12;
+
+			const value = await processor.popStack();
+			expect(value).toBe(0x1234);
+			expect(processor.stackPointer).toBe(0x01ff);
+		});
 	});
 });

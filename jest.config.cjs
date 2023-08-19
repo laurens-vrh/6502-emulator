@@ -6,5 +6,6 @@ module.exports = {
 		"^(\\.\\.?\\/.+)\\.js$": "$1",
 	},
 	verbose: true,
-	maxWorkers: "100%",
+	maxWorkers: "50%",
+	slowTestThreshold: 10,
 };

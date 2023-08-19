@@ -23,19 +23,7 @@ describe("Instructions", () => {
 		expect(processor.cycles).toBe(0);
 	});
 
-	test("instruction: JMP_ABS", async () => {
-		// instruction: JMP_ABS
-		// Jump to an address in the next two bytes.
-		memory.data[0xfffc] = Instruction.operations.JMP.absolute!;
-		memory.data[0xfffd] = 0x01;
-		memory.data[0xfffe] = 0x00;
-
-		await processor.execute(3);
-		expect(processor.programCounter).toBe(0x0001);
-		checkFlags(processor.flags, previousFlags, {});
-	});
-
-	test("instruction: JSR", async () => {
+	test("JSR", async () => {
 		// instruction: JSR
 		// Jump to an address specified in the next two bytes
 		// and push the return address onto the stack.
@@ -44,6 +32,18 @@ describe("Instructions", () => {
 		memory.data[0xfffe] = 0x00;
 
 		await processor.execute(6);
+		expect(processor.programCounter).toBe(0x0001);
+		checkFlags(processor.flags, previousFlags, {});
+	});
+
+	test("JMP_ABS", async () => {
+		// instruction: JMP_ABS
+		// Jump to an address in the next two bytes.
+		memory.data[0xfffc] = Instruction.operations.JMP.absolute!;
+		memory.data[0xfffd] = 0x01;
+		memory.data[0xfffe] = 0x00;
+
+		await processor.execute(3);
 		expect(processor.programCounter).toBe(0x0001);
 		checkFlags(processor.flags, previousFlags, {});
 	});
@@ -76,7 +76,7 @@ describe("Instructions", () => {
 		],
 	});
 
-	test("instruction: NOP", async () => {
+	test("NOP", async () => {
 		// instruction: NOP
 		// Do nothing for one cycle.
 		memory.data[0xfffc] = Instruction.operations.NOP.implied!;

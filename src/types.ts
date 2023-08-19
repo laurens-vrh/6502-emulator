@@ -1,3 +1,8 @@
+export interface ProcessorOptions {
+	verbose: boolean;
+	cycleDuration: number;
+}
+
 export type ProcessorFlags = {
 	carryFlag: boolean;
 	zeroFlag: boolean;
@@ -15,6 +20,7 @@ export enum OperationCode {
 	LDX = "LDX",
 	LDY = "LDY",
 	NOP = "NOP",
+	RTS = "RTS",
 	STA = "STA",
 	STX = "STX",
 	STY = "STY",

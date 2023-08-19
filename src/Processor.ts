@@ -1,12 +1,15 @@
 import { Instruction } from "./Instruction.js";
 import { Memory } from "./Memory.js";
-import { ProcessorFlags } from "./types.js";
+import { ProcessorFlags, ProcessorOptions } from "./types.js";
 import { formatHex } from "./utils/formatHex.js";
 import { sleep } from "./utils/sleep.js";
 
 export class Processor {
 	programCounter: number = 0xfffc;
-	stackPointer: number = 0x0100;
+	_stackPointer: number = 0xff;
+	get stackPointer() {
+		return 0x0100 + this._stackPointer;
+	}
 
 	accumulator: number = 0;
 	registerX: number = 0;
@@ -25,23 +28,32 @@ export class Processor {
 	memory: Memory;
 
 	cycles = 0;
-	cycleDuration = 0;
 	lastInstruction = 0;
 
-	constructor(memory: Memory, cycleDuration = 0) {
+	options = {
+		verbose: false,
+		cycleDuration: 0,
+	};
+
+	constructor(memory: Memory, options?: ProcessorOptions) {
 		this.memory = memory;
-		this.cycleDuration = cycleDuration;
+		this.options = options ?? this.options;
 	}
 
-	async execute(cycles: number, cycleDuration?: number) {
-		if (cycleDuration) this.cycleDuration = cycleDuration;
+	async execute(cycles: number) {
 		this.cycles += cycles;
+		if (this.options.verbose) this.logState();
 
 		while (this.cycles > 0) {
 			const instructionCode = await this.fetchByte();
 			this.lastInstruction = instructionCode;
 			const instruction = new Instruction(this, instructionCode);
 			await instruction.execute();
+		}
+
+		if (this.options.verbose) {
+			console.clear();
+			this.logState();
 		}
 	}
 
@@ -76,11 +88,27 @@ export class Processor {
 		return value;
 	}
 
+	async pushStack(address: number) {
+		this.memory.data[this.stackPointer - 1] = (address - 1) & 0x00ff;
+		await this.cycle();
+		this.memory.data[this.stackPointer] = (address - 1) >> 8;
+		await this.cycle();
+		this._stackPointer -= 2;
+	}
+
+	async popStack() {
+		const address = await this.readWord(this.stackPointer + 1);
+		this._stackPointer += 2;
+		await this.cycle();
+		await this.cycle();
+		return address + 1;
+	}
+
 	async cycle() {
 		this.cycles -= 1;
 
-		if (this.cycleDuration) {
-			await sleep(this.cycleDuration);
+		if (this.options.verbose) {
+			await sleep(this.options.cycleDuration);
 			console.clear();
 			this.logState();
 		}
@@ -102,11 +130,24 @@ export class Processor {
 	}
 
 	logState() {
+		const { operationCode, addressingMode } = Instruction.getOperation(
+			this.lastInstruction
+		);
+
 		console.log(
 			"--- Processor state ---\n",
 			`Program counter:\t${formatHex(this.programCounter)}\n`,
-			`Instruction:\t\t${formatHex(this.lastInstruction)}\n`,
+			`Instruction:\t\t${formatHex(this.lastInstruction)} ${
+				operationCode ? `(${operationCode} ${addressingMode})` : ""
+			}\n`,
 			`Stack pointer:\t\t${formatHex(this.stackPointer)}\n`,
+			this.stackPointer !== 0x01ff
+				? `Return address:\t${formatHex(
+						(this.memory.data[this.stackPointer] |
+							(this.memory.data[this.stackPointer + 1] << 8)) +
+							3
+				  )}\n`
+				: "\n",
 			"\n",
 			`Accumulator:\t${formatHex(this.accumulator, 2)}\n`,
 			`Register X:\t${formatHex(this.registerX, 2)}\n`,

@@ -26,14 +26,7 @@ export class Instruction {
 			}
 
 			case OperationCode.JSR: {
-				this.processor.memory.data[this.processor.stackPointer] =
-					(this.processor.programCounter - 1) & 0xff;
-				await this.processor.cycle();
-				this.processor.memory.data[this.processor.stackPointer + 1] =
-					(this.processor.programCounter - 1) >> 8;
-				await this.processor.cycle();
-				this.processor.stackPointer += 2;
-
+				await this.processor.pushStack(this.processor.programCounter);
 				this.processor.programCounter = address;
 				await this.processor.cycle();
 
@@ -61,6 +54,13 @@ export class Instruction {
 			}
 
 			case OperationCode.NOP: {
+				break;
+			}
+
+			case OperationCode.RTS: {
+				this.processor.programCounter = await this.processor.popStack();
+				await this.processor.cycle();
+
 				break;
 			}
 
@@ -196,6 +196,7 @@ export class Instruction {
 			absoluteX: 0xbc,
 		},
 		NOP: { implied: 0xea },
+		RTS: { implied: 0x60 },
 		STA: {
 			zeroPage: 0x85,
 			zeroPageX: 0x95,
