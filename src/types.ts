@@ -15,6 +15,9 @@ export enum OperationCode {
 	LDX = "LDX",
 	LDY = "LDY",
 	NOP = "NOP",
+	STA = "STA",
+	STX = "STX",
+	STY = "STY",
 }
 
 export enum AddressingMode {

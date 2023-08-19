@@ -1,6 +1,5 @@
 import { Processor } from "./Processor.js";
 import { AddressingMode, Operation, OperationCode } from "./types.js";
-import { formatHex } from "./utils/formatHex.js";
 
 export class Instruction {
 	processor: Processor;
@@ -15,15 +14,13 @@ export class Instruction {
 		const { operationCode, addressingMode } = Instruction.getOperation(
 			this.instruction
 		);
-		if (!operationCode || !addressingMode)
-			return console.log(
-				`[ERROR] Unknown instruction:`,
-				formatHex(this.instruction)
-			);
+		if (!operationCode || !addressingMode) return;
+
+		const address = await this.getAddress(addressingMode);
 
 		switch (operationCode) {
 			case OperationCode.JMP: {
-				this.processor.programCounter = await this.getData(addressingMode);
+				this.processor.programCounter = address;
 
 				break;
 			}
@@ -37,43 +34,27 @@ export class Instruction {
 				await this.processor.cycle();
 				this.processor.stackPointer += 2;
 
-				this.processor.programCounter = await this.getData(addressingMode);
+				this.processor.programCounter = address;
 				await this.processor.cycle();
 
 				break;
 			}
 
-			case OperationCode.LDA: {
-				var data = await this.getData(addressingMode);
-
-				if (addressingMode === AddressingMode.absolute)
-					data = await this.processor.readByte(data);
-
-				this.processor.accumulator = data;
-				this.processor.updateFlags();
-
-				break;
-			}
-
-			case OperationCode.LDX: {
-				var data = await this.getData(addressingMode);
-
-				if (addressingMode === AddressingMode.absolute)
-					data = await this.processor.readByte(data);
-
-				this.processor.registerX = data;
-				this.processor.updateFlags();
-
-				break;
-			}
-
+			case OperationCode.LDA:
+			case OperationCode.LDX:
 			case OperationCode.LDY: {
-				var data = await this.getData(addressingMode);
+				const data =
+					addressingMode === AddressingMode.immediate
+						? address
+						: await this.processor.readByte(address);
 
-				if (addressingMode === AddressingMode.absolute)
-					data = await this.processor.readByte(data);
-
-				this.processor.registerY = data;
+				this.processor[
+					operationCode === OperationCode.LDA
+						? "accumulator"
+						: operationCode === OperationCode.LDX
+						? "registerX"
+						: "registerY"
+				] = data;
 				this.processor.updateFlags();
 
 				break;
@@ -82,18 +63,33 @@ export class Instruction {
 			case OperationCode.NOP: {
 				break;
 			}
+
+			case OperationCode.STA:
+			case OperationCode.STX:
+			case OperationCode.STY: {
+				const value =
+					this.processor[
+						operationCode === OperationCode.STA
+							? "accumulator"
+							: operationCode === OperationCode.STX
+							? "registerX"
+							: "registerY"
+					];
+				this.processor.writeByte(address, value);
+
+				break;
+			}
 		}
 	}
 
-	async getData(addressingMode: AddressingMode): Promise<number> {
+	async getAddress(addressingMode: AddressingMode): Promise<number> {
 		switch (addressingMode) {
 			case AddressingMode.immediate: {
 				return await this.processor.fetchByte();
 			}
 
 			case AddressingMode.zeroPage: {
-				const address = await this.processor.fetchByte();
-				return await this.processor.readByte(address);
+				return await this.processor.fetchByte();
 			}
 
 			case AddressingMode.zeroPageX:
@@ -106,7 +102,7 @@ export class Instruction {
 				var address = await this.processor.fetchByte();
 				address = (address + register) % 0x100;
 				await this.processor.cycle();
-				return await this.processor.readByte(address);
+				return address;
 			}
 
 			case AddressingMode.absolute: {
@@ -123,7 +119,7 @@ export class Instruction {
 				const address = await this.processor.fetchWord();
 				const newAddress = address + register;
 				if (address >> 8 !== newAddress >> 8) await this.processor.cycle();
-				return await this.processor.readByte(newAddress);
+				return newAddress;
 			}
 
 			case AddressingMode.indirectX: {
@@ -131,7 +127,7 @@ export class Instruction {
 				zeroPageAddress = (zeroPageAddress + this.processor.registerX) % 0x100;
 				await this.processor.cycle();
 				const address = await this.processor.readWord(zeroPageAddress);
-				return await this.processor.readByte(address);
+				return address;
 			}
 
 			case AddressingMode.indirectY: {
@@ -139,7 +135,7 @@ export class Instruction {
 				const address = await this.processor.readWord(zeroPageAddress);
 				const newAddress = address + this.processor.registerY;
 				if (address >> 8 !== newAddress >> 8) await this.processor.cycle();
-				return await this.processor.readByte(newAddress);
+				return newAddress;
 			}
 
 			default: {
@@ -200,5 +196,24 @@ export class Instruction {
 			absoluteX: 0xbc,
 		},
 		NOP: { implied: 0xea },
+		STA: {
+			zeroPage: 0x85,
+			zeroPageX: 0x95,
+			absolute: 0x8d,
+			absoluteX: 0x9d,
+			absoluteY: 0x99,
+			indirectX: 0x81,
+			indirectY: 0x91,
+		},
+		STX: {
+			zeroPage: 0x86,
+			zeroPageY: 0x96,
+			absolute: 0x8e,
+		},
+		STY: {
+			zeroPage: 0x84,
+			zeroPageX: 0x94,
+			absolute: 0x8c,
+		},
 	};
 }

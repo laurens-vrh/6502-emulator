@@ -56,6 +56,12 @@ export class Processor {
 		return value;
 	}
 
+	async writeByte(address: number, value: number) {
+		this.memory.data[address] = value;
+		await this.cycle();
+		return;
+	}
+
 	async readWord(address: number) {
 		const lower = await this.readByte(address);
 		const upper = (await this.readByte(address + 1)) << 8;

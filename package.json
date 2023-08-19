@@ -5,11 +5,12 @@
 	"main": "dist/index.js",
 	"type": "module",
 	"scripts": {
+		"start": "node .",
 		"test": "jest",
+		"test:watch": "jest --watchAll",
 		"build": "tsc",
-		"watch": "tsc --watch",
-		"dev": "nodemon .",
-		"start": "node ."
+		"build:watch": "tsc",
+		"dev": "nodemon ."
 	},
 	"keywords": [],
 	"author": "laurens-vrh",
