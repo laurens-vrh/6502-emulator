@@ -3,52 +3,14 @@ import { Processor } from "./Processor.js";
 import { Instruction } from "./Instruction.js";
 
 const memory = new Memory();
-const processor = new Processor(memory, { verbose: true, cycleDuration: 100 });
+const processor = new Processor(memory, { verbose: true, cycleDuration: 1000 });
 
-processor.programCounter = 0xff00;
-memory.data[0xff00] = Instruction.operations.JSR.absolute!;
-memory.data[0xff01] = 0x50;
-memory.data[0xff02] = 0xf0;
-memory.data[0xff03] = Instruction.operations.LDX.immediate!;
-memory.data[0xff04] = 0x44;
-memory.data[0xf050] = Instruction.operations.JSR.absolute!;
-memory.data[0xf051] = 0x00;
-memory.data[0xf052] = 0xf0;
-memory.data[0xf053] = Instruction.operations.RTS.implied!;
-memory.data[0xf000] = Instruction.operations.JSR.absolute!;
-memory.data[0xf001] = 0x50;
-memory.data[0xf002] = 0x90;
-memory.data[0xf003] = Instruction.operations.RTS.implied!;
-memory.data[0x9050] = Instruction.operations.JSR.absolute!;
-memory.data[0x9051] = 0x00;
-memory.data[0x9052] = 0x90;
-memory.data[0x9053] = Instruction.operations.RTS.implied!;
-memory.data[0x9000] = Instruction.operations.JSR.absolute!;
-memory.data[0x9001] = 0x50;
-memory.data[0x9002] = 0x80;
-memory.data[0x9003] = Instruction.operations.RTS.implied!;
-memory.data[0x8050] = Instruction.operations.JSR.absolute!;
-memory.data[0x8051] = 0x00;
-memory.data[0x8052] = 0x80;
-memory.data[0x8053] = Instruction.operations.RTS.implied!;
-memory.data[0x8000] = Instruction.operations.JSR.absolute!;
-memory.data[0x8001] = 0x50;
-memory.data[0x8002] = 0x70;
-memory.data[0x8003] = Instruction.operations.RTS.implied!;
-memory.data[0x7050] = Instruction.operations.JSR.absolute!;
-memory.data[0x7051] = 0x00;
-memory.data[0x7052] = 0x70;
-memory.data[0x7053] = Instruction.operations.RTS.implied!;
-memory.data[0x7000] = Instruction.operations.JSR.absolute!;
-memory.data[0x7001] = 0x50;
-memory.data[0x7002] = 0x60;
-memory.data[0x7003] = Instruction.operations.RTS.implied!;
-memory.data[0x6050] = Instruction.operations.JSR.absolute!;
-memory.data[0x6051] = 0x00;
-memory.data[0x6052] = 0x60;
-memory.data[0x6053] = Instruction.operations.RTS.implied!;
-memory.data[0x6000] = Instruction.operations.LDA.immediate!;
-memory.data[0x6001] = 0x55;
-memory.data[0x6002] = Instruction.operations.RTS.implied!;
+memory.loadValues({
+	0xfffc: Instruction.operations.JMP.indirect!,
+	0xfffd: 0x34,
+	0xfffe: 0x12,
+	0x1234: 0x78,
+	0x1235: 0x56,
+});
 
-await processor.execute(124);
+await processor.execute(5);

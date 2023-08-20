@@ -9,7 +9,7 @@
 		"test": "jest",
 		"test:watch": "jest --watchAll",
 		"build": "tsc",
-		"build:watch": "tsc",
+		"build:watch": "tsc --watch",
 		"dev": "nodemon ."
 	},
 	"keywords": [],

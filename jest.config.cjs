@@ -7,5 +7,5 @@ module.exports = {
 	},
 	verbose: true,
 	maxWorkers: "50%",
-	slowTestThreshold: 10,
+	slowTestThreshold: 15,
 };

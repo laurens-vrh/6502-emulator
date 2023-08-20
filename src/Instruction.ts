@@ -1,5 +1,4 @@
 import { Processor } from "./Processor.js";
-import { AddressingMode, Operation, OperationCode } from "./types.js";
 
 export class Instruction {
 	processor: Processor;
@@ -122,6 +121,11 @@ export class Instruction {
 				return newAddress;
 			}
 
+			case AddressingMode.indirect: {
+				const address = await this.processor.fetchWord();
+				return await this.processor.readWord(address);
+			}
+
 			case AddressingMode.indirectX: {
 				var zeroPageAddress = await this.processor.fetchByte();
 				zeroPageAddress = (zeroPageAddress + this.processor.registerX) % 0x100;
@@ -163,7 +167,7 @@ export class Instruction {
 		return result;
 	}
 
-	static operations: Record<string, Operation> = {
+	static operations: Record<OperationCode, Operation> = {
 		JMP: {
 			absolute: 0x4c,
 			indirect: 0x6c, // TODO: implement indirect mode
@@ -217,4 +221,33 @@ export class Instruction {
 			absolute: 0x8c,
 		},
 	};
+}
+
+export enum AddressingMode {
+	immediate = "immediate",
+	zeroPage = "zeroPage",
+	zeroPageX = "zeroPageX",
+	zeroPageY = "zeroPageY",
+	absolute = "absolute",
+	absoluteX = "absoluteX",
+	absoluteY = "absoluteY",
+	implied = "implied",
+	indirect = "indirect", // TODO: implement for JMP
+	indirectX = "indirectX",
+	indirectY = "indirectY",
+}
+
+export type Operation = Partial<Record<AddressingMode, number>>;
+
+export enum OperationCode {
+	JMP = "JMP",
+	JSR = "JSR",
+	LDA = "LDA",
+	LDX = "LDX",
+	LDY = "LDY",
+	NOP = "NOP",
+	RTS = "RTS",
+	STA = "STA",
+	STX = "STX",
+	STY = "STY",
 }

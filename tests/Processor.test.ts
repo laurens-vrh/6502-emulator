@@ -20,17 +20,20 @@ describe("Processor", () => {
 	});
 
 	test("method: cycle()", async () => {
-		// method: cycle()
-		// Decrease the cycle counter.
+		/*
+				method: cycle()
+			Decrease the cycle counter. */
+
 		processor.cycles = 1;
 
 		await processor.cycle();
 	});
 
 	test("method: updateFlags()", () => {
-		// method: updateFlags()
-		// Update the zero and negative flags according to
-		// the value in the accumulator
+		/*
+				method: updateFlags()
+			Update the zero and negative flags according to
+			the value in the accumulator */
 
 		processor.lastInstruction = Instruction.operations.LDA.immediate!;
 
@@ -61,22 +64,26 @@ describe("Processor", () => {
 
 	describe("Memory operations", () => {
 		test("method: readByte()", async () => {
-			// method: readByte()
-			// Read a byte from memory and cycle.
+			/*
+					method: readByte()
+				Read a byte from memory and cycle. */
+
 			processor.cycles = 1;
-			memory.data[0x1111] = 0xff;
+			memory.loadValue(0x1111, 0xff);
 
 			const value = await processor.readByte(0x1111);
 			expect(value).toBe(0xff);
 		});
 
 		test("method: fetchByte()", async () => {
-			// method: fetchByte()
-			// Fetch the next program byte from memory, cycle
-			// and increment the program counter.
+			/*
+					method: fetchByte()
+				Fetch the next program byte from memory, cycle
+				and increment the program counter. */
+
 			processor.cycles = 1;
 			processor.programCounter = 0x0000;
-			memory.data[0x0000] = 0xff;
+			memory.loadValue(0x0000, 0xff);
 
 			const value = await processor.fetchByte();
 			expect(value).toBe(0xff);
@@ -84,8 +91,10 @@ describe("Processor", () => {
 		});
 
 		test("method: writeByte()", async () => {
-			// method: write()
-			// Write a byte to memory and cycle.
+			/*
+					method: write()
+				Write a byte to memory and cycle. */
+
 			processor.cycles = 1;
 
 			await processor.writeByte(0x1111, 0x55);
@@ -93,24 +102,32 @@ describe("Processor", () => {
 		});
 
 		test("method: readWord()", async () => {
-			// method: readWord()
-			// Read a word from memory and cycle twice.
+			/*
+					method: readWord()
+				Read a word from memory and cycle twice. */
+
 			processor.cycles = 2;
-			memory.data[0x0000] = 0x34;
-			memory.data[0x0001] = 0x12;
+			memory.loadValues({
+				0x0000: 0x34,
+				0x0001: 0x12,
+			});
 
 			const value = await processor.readWord(0x0000);
 			expect(value).toBe(0x1234);
 		});
 
 		test("method: fetchWord()", async () => {
-			// method: fetchWord()
-			// Fetch the next program word from memory, cycle twice
-			// and increment the program counter twice.
+			/*
+					method: fetchWord()
+				Fetch the next program word from memory, cycle twice
+				and increment the program counter twice. */
+
 			processor.cycles = 2;
 			processor.programCounter = 0x0000;
-			memory.data[0x0000] = 0x34;
-			memory.data[0x0001] = 0x12;
+			memory.loadValues({
+				0x0000: 0x34,
+				0x0001: 0x12,
+			});
 
 			const value = await processor.fetchWord();
 			expect(value).toBe(0x1234);
@@ -139,8 +156,10 @@ describe("Processor", () => {
 
 			processor.cycles = 4;
 			processor._stackPointer = 0xfd;
-			memory.data[0x01fe] = 0x33;
-			memory.data[0x01ff] = 0x12;
+			memory.loadValues({
+				0x01fe: 0x33,
+				0x01ff: 0x12,
+			});
 
 			const value = await processor.popStack();
 			expect(value).toBe(0x1234);

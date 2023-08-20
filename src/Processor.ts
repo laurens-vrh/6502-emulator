@@ -1,6 +1,5 @@
 import { Instruction } from "./Instruction.js";
 import { Memory } from "./Memory.js";
-import { ProcessorFlags, ProcessorOptions } from "./types.js";
 import { formatHex } from "./utils/formatHex.js";
 import { sleep } from "./utils/sleep.js";
 
@@ -163,3 +162,18 @@ export class Processor {
 		);
 	}
 }
+
+export interface ProcessorOptions {
+	verbose: boolean;
+	cycleDuration: number;
+}
+
+export type ProcessorFlags = {
+	carryFlag: boolean;
+	zeroFlag: boolean;
+	interruptFlag: boolean;
+	decimalMode: boolean;
+	breakCommand: boolean;
+	overflowFlag: boolean;
+	negativeFlag: boolean;
+};

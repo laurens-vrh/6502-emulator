@@ -3,17 +3,14 @@ import { afterEach, beforeEach, describe, expect, test } from "@jest/globals";
 import { Instruction } from "../src/Instruction";
 import { Memory } from "../src/Memory";
 import { Processor } from "../src/Processor";
-// import { ProcessorFlags } from "../src/types";
 
 var memory: Memory;
 var processor: Processor;
-// var previousFlags: ProcessorFlags;
 
 describe("Programs", () => {
 	beforeEach(() => {
 		memory = new Memory();
 		processor = new Processor(memory);
-		// previousFlags = Object.assign({}, processor.flags);
 	});
 
 	afterEach(() => {
@@ -65,6 +62,7 @@ describe("Programs", () => {
 			await processor.execute(40);
 			expect(processor.accumulator).toBe(0x55);
 			expect(processor.registerX).toBe(0x44);
+			expect(processor.stackPointer).toBe(0x01ff);
 		});
 	});
 });
