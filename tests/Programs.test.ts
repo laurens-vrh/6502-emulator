@@ -17,7 +17,7 @@ describe("Programs", () => {
 		expect(processor.cycles).toBe(0);
 	});
 
-	describe("Jumps and calls", () => {
+	describe("Jumps and Calls", () => {
 		test("JSR and RTS", async () => {
 			/*      program: JSR and RTS
                 Jump to an address specified in the next two bytes

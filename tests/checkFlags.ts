@@ -1,5 +1,5 @@
 import { expect } from "@jest/globals";
-import { ProcessorFlags } from "../src/types";
+import { ProcessorFlags } from "../src/Processor";
 
 export function checkFlags(
 	flags: ProcessorFlags,

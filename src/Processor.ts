@@ -17,7 +17,7 @@ export class Processor {
 	flags: ProcessorFlags = {
 		carryFlag: false,
 		zeroFlag: false,
-		interruptFlag: false,
+		interruptDisable: false,
 		decimalMode: false,
 		breakCommand: false,
 		overflowFlag: false,
@@ -27,11 +27,14 @@ export class Processor {
 	memory: Memory;
 
 	cycles = 0;
+	cyclesUsed = 0;
 	lastInstruction = 0;
+	lastRead = 0;
 
 	options = {
 		verbose: false,
 		cycleDuration: 0,
+		persistLogs: false,
 	};
 
 	constructor(memory: Memory, options?: ProcessorOptions) {
@@ -49,16 +52,13 @@ export class Processor {
 			const instruction = new Instruction(this, instructionCode);
 			await instruction.execute();
 		}
-
-		if (this.options.verbose) {
-			console.clear();
-			this.logState();
-		}
 	}
 
 	async readByte(address: number) {
+		const value = this.memory.data[address];
+		this.lastRead = value;
 		await this.cycle();
-		return this.memory.data[address];
+		return value;
 	}
 
 	async fetchByte() {
@@ -76,41 +76,45 @@ export class Processor {
 	async readWord(address: number) {
 		const lower = await this.readByte(address);
 		const upper = (await this.readByte(address + 1)) << 8;
-
 		return upper | lower;
 	}
 
 	async fetchWord() {
 		const value = await this.readWord(this.programCounter);
-
 		this.programCounter += 2;
 		return value;
 	}
 
-	async pushStack(address: number) {
-		this.memory.data[this.stackPointer - 1] = (address - 1) & 0x00ff;
-		await this.cycle();
-		this.memory.data[this.stackPointer] = (address - 1) >> 8;
-		await this.cycle();
-		this._stackPointer -= 2;
+	async pushStack(value: number, type: "word" | "byte" = "word") {
+		if (type === "word") {
+			value--;
+			await this.writeByte(this.stackPointer, value >> 8);
+			this._stackPointer--;
+		}
+
+		await this.writeByte(this.stackPointer, value & 0x00ff);
+		this._stackPointer--;
 	}
 
-	async popStack() {
-		const address = await this.readWord(this.stackPointer + 1);
-		this._stackPointer += 2;
+	async pullStack(type: "word" | "byte" = "word") {
+		var value;
+		if (type === "word") {
+			value = (await this.readWord(this.stackPointer + 1)) + 1;
+			this._stackPointer += 2;
+		} else {
+			value = (await this.readByte(this.stackPointer + 1)) % 100;
+			this._stackPointer++;
+		}
 		await this.cycle();
-		await this.cycle();
-		return address + 1;
+		return value;
 	}
 
 	async cycle() {
-		this.cycles -= 1;
+		if (this.options.cycleDuration > 0) await sleep(this.options.cycleDuration);
+		this.cycles--;
+		this.cyclesUsed++;
 
-		if (this.options.verbose) {
-			await sleep(this.options.cycleDuration);
-			console.clear();
-			this.logState();
-		}
+		if (this.options.verbose) this.logState();
 	}
 
 	updateFlags() {
@@ -133,18 +137,20 @@ export class Processor {
 			this.lastInstruction
 		);
 
+		if (!this.options.persistLogs) console.clear();
 		console.log(
 			"--- Processor state ---\n",
 			`Program counter:\t${formatHex(this.programCounter)}\n`,
-			`Instruction:\t\t${formatHex(this.lastInstruction)} ${
+			`Instruction:\t\t${formatHex(this.lastInstruction || 0)} ${
 				operationCode ? `(${operationCode} ${addressingMode})` : ""
 			}\n`,
+			`Last read:\t\t${formatHex(this.lastRead || 0, 2)}\n`,
 			`Stack pointer:\t\t${formatHex(this.stackPointer)}\n`,
 			this.stackPointer !== 0x01ff
 				? `Return address:\t${formatHex(
-						(this.memory.data[this.stackPointer] |
-							(this.memory.data[this.stackPointer + 1] << 8)) +
-							3
+						((this.memory.data[this.stackPointer + 2] << 8) |
+							this.memory.data[this.stackPointer + 1]) +
+							1
 				  )}\n`
 				: "\n",
 			"\n",
@@ -157,7 +163,7 @@ export class Processor {
 				.map((f) => (f ? 1 : 0))
 				.join(" | ")}\n`,
 			"\n",
-			`Cycles:\t${this.cycles}\n`,
+			`Cycles remaining:\t${this.cycles} (used: ${this.cyclesUsed})\n`,
 			"---                 ---"
 		);
 	}
@@ -166,12 +172,13 @@ export class Processor {
 export interface ProcessorOptions {
 	verbose: boolean;
 	cycleDuration: number;
+	persistLogs: boolean;
 }
 
 export type ProcessorFlags = {
 	carryFlag: boolean;
 	zeroFlag: boolean;
-	interruptFlag: boolean;
+	interruptDisable: boolean;
 	decimalMode: boolean;
 	breakCommand: boolean;
 	overflowFlag: boolean;

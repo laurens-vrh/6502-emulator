@@ -62,7 +62,7 @@ describe("Processor", () => {
 		});
 	});
 
-	describe("Memory operations", () => {
+	describe("Memory Operations", () => {
 		test("method: readByte()", async () => {
 			/*
 					method: readByte()
@@ -148,21 +148,34 @@ describe("Processor", () => {
 			expect(processor.stackPointer).toBe(0x01fd);
 		});
 
-		test("method: popStack()", async () => {
+		test("method: pushStack() 2", async () => {
 			/*
-					method: popStack()
-				Pop an address from the stack and update the
+					method: pushStack() 2
+				Push an 8-bit value onto the stack and update the
 				stack pointer accordingly */
 
 			processor.cycles = 4;
-			processor._stackPointer = 0xfd;
+
+			await processor.pushStack(0x44, "byte");
+			const value = await processor.readByte(processor.stackPointer + 1);
+			expect(value).toBe(0x44);
+			expect(processor.stackPointer).toBe(0x01fe);
+		});
+
+		test("method: popStack() 2", async () => {
+			/*
+					method: popStack() 2
+				Pop an 8-bit value from the stack and update the
+				stack pointer accordingly */
+
+			processor.cycles = 4;
+			processor._stackPointer = 0xfe;
 			memory.loadValues({
-				0x01fe: 0x33,
-				0x01ff: 0x12,
+				0x01ff: 0x44,
 			});
 
-			const value = await processor.popStack();
-			expect(value).toBe(0x1234);
+			const value = await processor.pullStack("byte");
+			expect(value).toBe(0x44);
 			expect(processor.stackPointer).toBe(0x01ff);
 		});
 	});

@@ -1,81 +1,59 @@
 import { Processor } from "./Processor.js";
+import { handleJumpsAndCallsOperation } from "./instructions/jumpsAndCallsOperation.js";
+import { handleLoadStoreOperation } from "./instructions/loadStoreOperation.js";
+import { handleStackOperation } from "./instructions/stackOperation.js";
+import { handleSystemFunctionsOperation } from "./instructions/systemFunctionsOperation.js";
 
 export class Instruction {
 	processor: Processor;
 	instruction: number;
+	operationCode?: OperationCode;
+	addressingMode?: AddressingMode;
 
 	constructor(processor: Processor, instruction: number) {
+		const { operationCode, addressingMode } =
+			Instruction.getOperation(instruction);
+
 		this.processor = processor;
 		this.instruction = instruction;
+		this.operationCode = operationCode;
+		this.addressingMode = addressingMode;
 	}
 
 	async execute() {
-		const { operationCode, addressingMode } = Instruction.getOperation(
-			this.instruction
-		);
-		if (!operationCode || !addressingMode) return;
+		if (!this.operationCode || !this.addressingMode) return;
+		const address = await this.getAddress(this.addressingMode);
 
-		const address = await this.getAddress(addressingMode);
-
-		switch (operationCode) {
-			case OperationCode.JMP: {
-				this.processor.programCounter = address;
-
-				break;
-			}
-
-			case OperationCode.JSR: {
-				await this.processor.pushStack(this.processor.programCounter);
-				this.processor.programCounter = address;
-				await this.processor.cycle();
-
-				break;
-			}
-
+		switch (this.operationCode) {
 			case OperationCode.LDA:
 			case OperationCode.LDX:
-			case OperationCode.LDY: {
-				const data =
-					addressingMode === AddressingMode.immediate
-						? address
-						: await this.processor.readByte(address);
+			case OperationCode.LDY:
+			case OperationCode.STA:
+			case OperationCode.STX:
+			case OperationCode.STY: {
+				await handleLoadStoreOperation(this, address);
+				break;
+			}
 
-				this.processor[
-					operationCode === OperationCode.LDA
-						? "accumulator"
-						: operationCode === OperationCode.LDX
-						? "registerX"
-						: "registerY"
-				] = data;
-				this.processor.updateFlags();
+			case OperationCode.JMP:
+			case OperationCode.JSR:
+			case OperationCode.RTS: {
+				await handleJumpsAndCallsOperation(this, address);
+				break;
+			}
 
+			case OperationCode.TSX:
+			case OperationCode.TXS:
+			case OperationCode.PHA:
+			case OperationCode.PHP:
+			case OperationCode.PLA:
+			case OperationCode.PLP: {
+				await handleStackOperation(this, address);
 				break;
 			}
 
 			case OperationCode.NOP: {
-				break;
-			}
-
-			case OperationCode.RTS: {
-				this.processor.programCounter = await this.processor.popStack();
-				await this.processor.cycle();
-
-				break;
-			}
-
-			case OperationCode.STA:
-			case OperationCode.STX:
-			case OperationCode.STY: {
-				const value =
-					this.processor[
-						operationCode === OperationCode.STA
-							? "accumulator"
-							: operationCode === OperationCode.STX
-							? "registerX"
-							: "registerY"
-					];
-				this.processor.writeByte(address, value);
-
+				await handleSystemFunctionsOperation(this, address);
 				break;
 			}
 		}
@@ -200,6 +178,10 @@ export class Instruction {
 			absoluteX: 0xbc,
 		},
 		NOP: { implied: 0xea },
+		PHA: { implied: 0x48 },
+		PHP: { implied: 0x08 },
+		PLA: { implied: 0x68 },
+		PLP: { implied: 0x28 },
 		RTS: { implied: 0x60 },
 		STA: {
 			zeroPage: 0x85,
@@ -220,6 +202,8 @@ export class Instruction {
 			zeroPageX: 0x94,
 			absolute: 0x8c,
 		},
+		TSX: { implied: 0xba },
+		TXS: { implied: 0x9a },
 	};
 }
 
@@ -246,8 +230,14 @@ export enum OperationCode {
 	LDX = "LDX",
 	LDY = "LDY",
 	NOP = "NOP",
+	PHA = "PHA",
+	PHP = "PHP",
+	PLA = "PLA",
+	PLP = "PLP",
 	RTS = "RTS",
 	STA = "STA",
 	STX = "STX",
 	STY = "STY",
+	TSX = "TSX",
+	TXS = "TXS",
 }
